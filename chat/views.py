@@ -1,0 +1,62 @@
+from django.db.models import Prefetch
+from rest_framework import mixins, viewsets
+from rest_framework.decorators import action
+from rest_framework.response import Response
+
+from friend import serializers
+
+from .models import Conversation, Message
+from .serializers import ConversationSerializer, MessageSerializer
+
+__all__ = [
+    "ConversationViewSet",
+    "MessageViewSet",
+]
+
+
+class ConversationViewSet(viewsets.ModelViewSet):
+    queryset = Conversation.objects.all()
+    serializer_class = ConversationSerializer
+
+    @action(detail=True)
+    def messages(self, request, pk=None):
+
+        messages = (
+            Message.objects.filter(conversation=pk)
+            .prefetch_related("content_object", "reply")
+            .order_by("-created_at")
+        )
+        serializer = MessageSerializer(messages, many=True)
+        return Response(serializer.data)
+
+    def get_queryset(self):
+
+        if self.action != "list":
+            return super().get_queryset()
+
+        return (
+            super()
+            .get_queryset()
+            .prefetch_related(
+                Prefetch(
+                    "messages",
+                    queryset=Message.objects.prefetch_related("content_object")
+                    .order_by("conversation", "-created_at")
+                    .distinct("conversation"),
+                )
+            )
+        )
+
+
+class MessageViewSet(viewsets.ModelViewSet):
+    queryset = (
+        Message.objects.order_by("-created_at")
+        .prefetch_related("content_object", "reply")
+        .all()
+    )
+    serializer_class = MessageSerializer
+
+    # def perform_create(self, serializer):
+    #     super().perform_create(serializer)
+
+    #     print(serializer.instance)
