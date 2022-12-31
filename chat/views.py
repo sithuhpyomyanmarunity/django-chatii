@@ -15,7 +15,7 @@ __all__ = [
 
 
 class ConversationViewSet(viewsets.ModelViewSet):
-    queryset = Conversation.objects.all()
+    queryset = Conversation.objects.order_by("-updated_at").all()
     serializer_class = ConversationSerializer
     authentication_classes = [SessionAuthentication]
     permission_classes = [IsAuthenticated]
