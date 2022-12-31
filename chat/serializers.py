@@ -73,8 +73,15 @@ class ConversationSerializer(serializers.ModelSerializer):
 
         return MessageSerializer(message).data
 
+    def save(self, **kwargs):
+        instance: Conversation = super().save(**kwargs)
 
-        return serializer.data
+        if (request := self.context.get("request")) is not None and request.user:
+            Participant(
+                user=request.user, role=Participant.Role.ADMIN, conversation=instance
+            ).save()
+            instance.participants.add(request.user)
+        return instance
 
     class Meta:
         model = Conversation
