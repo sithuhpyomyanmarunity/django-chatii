@@ -157,10 +157,26 @@ class RecursiveSerializer(serializers.RelatedField):
         return self.parent.Meta.model.objects.all()
 
 
+class ConversationRelatedField(serializers.RelatedField):
+    def to_representation(self, value):
+        data = ConversationSerializer(value, has_message=False).data
+        data["id"] = str(data["id"])
+        return data
+
+    def to_internal_value(self, data):
+        return self.get_queryset().filter(pk=data).first()
+
+    def get_queryset(self):
+        if (request := self.context.get("request")) is not None:
+            return Conversation.objects.filter(participant__user=request.user.id)
+        return super().get_queryset()
+
+
 class MessageSerializer(serializers.ModelSerializer):
     content_type = ContentTypeSerializer()
     detail = MessageObjectRelatedField()
     # reply = RecursiveSerializer()
+    conversation = ConversationRelatedField()
 
     class Meta:
         model = Message
