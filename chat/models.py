@@ -51,7 +51,11 @@ def get_message_content():
 class Message(models.Model):
     id = models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True)
     conversation = models.ForeignKey(
-        Conversation(), on_delete=models.CASCADE, null=True, related_name="messages"
+        Conversation(),
+        on_delete=models.CASCADE,
+        null=True,
+        blank=False,
+        related_name="messages",
     )
     sender = models.ForeignKey(
         settings.AUTH_USER_MODEL,
