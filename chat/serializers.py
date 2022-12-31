@@ -3,6 +3,8 @@ from django.contrib.contenttypes.models import ContentType
 from rest_framework import serializers
 from rest_framework.fields import empty
 
+from chat.validators import min_list_length
+
 from .models import Conversation, Message, Participant, TextMessage, get_message_content
 
 
@@ -61,6 +63,7 @@ class ConversationSerializer(serializers.ModelSerializer):
                     .objects.filter(is_staff=False, is_superuser=False, is_active=True)
                     .all(),
                 ),
+                validators=[min_list_length(1)],
             )
         return fields
 
