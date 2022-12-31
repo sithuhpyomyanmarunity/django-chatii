@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     "chat",
     "friend",
     "rest_framework",
+    "django_filters",
     "corsheaders",
     "django_extensions",
 ]
