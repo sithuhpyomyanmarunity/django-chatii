@@ -159,8 +159,7 @@ class RecursiveSerializer(serializers.RelatedField):
 
 class MessageSerializer(serializers.ModelSerializer):
     content_type = ContentTypeSerializer()
-    content_object = MessageObjectRelatedField()
-
+    detail = MessageObjectRelatedField()
     # reply = RecursiveSerializer()
 
     class Meta:
