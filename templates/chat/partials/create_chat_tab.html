@@ -1,0 +1,154 @@
+<template x-if="tab == 'create-chat'">
+  <div
+    class="flex h-full flex-col"
+    x-data="{
+      name: '',
+      search: '',
+      searchController: null,
+      loading: false,
+      friends: [],
+      selectedFriends: [],
+      get notSelectedFriends() { 
+        return this.friends.filter(f => {
+          return this.selectedFriends.findIndex(sf => sf.id == f.id) == -1;
+        }) 
+      },
+      friendChecked(friend, checked = true) { 
+        if (checked) {
+          this.selectedFriends.push({...friend});
+        } else {
+          const index = this.selectedFriends.findIndex(sf => sf.id == friend.id);
+          if (index > -1) {
+            this.selectedFriends.splice(index, 1);
+          }
+        }
+      },
+      async createConversation() {
+        if (this.loading) return;
+
+        this.loading = true;
+        const data = {
+          name: this.name,
+          participants: this.selectedFriends.map((sf) => sf.id),
+          conversation_type: 'group',
+        };
+
+        const conversation = await (await fetch('/conversations/', {
+          body: JSON.stringify(data),
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFTOKEN': this.csrf_token,
+          }
+        })).json();
+
+        $dispatch('conversation-created', { conversation: conversation });
+
+        this.loading = false;
+        this.selectedFriends = [];
+        this.name = '';
+      },
+      async searchFriends(search = null) {
+        if (this.searchController) {
+          this.searchController.abort();
+        }
+
+        this.searchController = new AbortController();
+        const signal = this.searchController.signal;
+
+        const url = `/friends/${search ? `?search=${search}`: ''}`;
+        try {
+          this.friends = await (await fetch(url, { signal })).json();
+          this.searchController = null;
+        } catch(error) {
+
+        }
+      }
+      
+    }"
+    x-init="
+      $watch('search', (value) => {
+        searchFriends(value);
+      });
+      await searchFriends();
+    "
+  >
+    <!-- prettier-ignore -->
+    {% include './tab_title.html' with tab_title='Create Chat' %}
+
+    <div class="h-full overflow-y-auto">
+      <div class="m-4">
+        <div class="mb-3">
+          <label for="id_group_name" class="text-xs text-stone-400">
+            Group name
+          </label>
+          <input
+            id="id_group_name"
+            type="text"
+            class="w-full flex-grow rounded-xl bg-gray-200 py-3 pl-5 pr-20"
+            placeholder="Enter name"
+            x-model="name"
+          />
+        </div>
+
+        <div class="mb-3" role="group" aria-labelledby="id_participants">
+          <span id="id_participants" class="text-xs text-stone-400">
+            Participants
+          </span>
+
+          <div class="mb-3">
+            <input
+              id="id_participants_search"
+              type="text"
+              class="w-full flex-grow rounded-xl bg-gray-200 py-3 pl-5 pr-20"
+              placeholder="Search participants"
+              x-model.debounce.300ms="search"
+            />
+          </div>
+
+          <div
+            x-show="selectedFriends.length > 0"
+            class="mb-4 rounded-xl border-2 border-[#efeff5] bg-white"
+            style="box-shadow: 0 0.125rem 0.1875rem 0 rgb(34 37 47 / 3%)"
+          >
+            <div class="py-2">
+              <template
+                x-for="(friend, index) in selectedFriends"
+                x-data="{ checked: true }"
+                :key="friend.id"
+              >
+                <!-- prettier-ignore -->
+                {% include './participant_list_item.html' %}
+              </template>
+            </div>
+          </div>
+          <div
+            class="mb-6 rounded-xl border-2 border-[#efeff5] bg-white"
+            style="box-shadow: 0 0.125rem 0.1875rem 0 rgb(34 37 47 / 3%)"
+          >
+            <div class="py-3">
+              <template
+                x-for="(friend, index) in notSelectedFriends"
+                x-data="{ checked: false }"
+                :key="friend.id"
+              >
+                <!-- prettier-ignore -->
+                {% include './participant_list_item.html' %}
+              </template>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-auto flex-shrink-0 border-t-2 border-gray-200 p-4">
+      <button
+        @click="createConversation()"
+        type="button"
+        class="w-full rounded-xl bg-slate-700 py-3 px-5 text-center font-medium text-white"
+      >
+        Create Chat
+      </button>
+    </div>
+  </div>
+</template>

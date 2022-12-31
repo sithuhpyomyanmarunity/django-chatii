@@ -1,0 +1,156 @@
+<div
+  class="h-screen flex-grow"
+  x-data="{
+    activeConversation: null,
+    message: '',
+    pageOpened: false,
+    cachedMessages: {},
+    get messages() {
+      if(!this.activeConversation || !this.cachedMessages[this.activeConversation.id]) return [];
+
+      return this.cachedMessages[this.activeConversation.id];
+    },
+    async openConversation(conversation, pageOpened = false) {
+
+      if (this.activeConversation) {
+        this.activeConversation.active = false;
+      }
+
+      this.activeConversation = conversation;
+      this.activeConversation.active = true;
+      this.pageOpened = pageOpened;
+
+      await this.loadMessages();
+
+      $nextTick(() => {
+        $refs.messageContainer.scrollTo(0, $refs.messageContainer.scrollHeight);
+      });
+    },
+    async loadMessages() {
+      if(!this.activeConversation) return;
+
+      const id = this.activeConversation.id;
+      if (
+        !this.cachedMessages[id]
+      ) {
+        try {
+          const messages = await (await fetch(`/conversations/${id}/messages/`)).json();
+          this.cachedMessages = {
+            ...this.cachedMessages,
+            [id]: messages,
+          };
+        } catch(error) {
+        }
+      }
+    },
+    async sendMessage() {
+      const conversation_id = this.activeConversation.id;
+
+      const data = {
+        conversation: conversation_id,
+        content_type: 'chat.textmessage',
+        detail: {
+          content: this.message,
+        }
+      };
+
+      try {
+        const message = await (await fetch(`/messages/`, {
+          method: 'POST',
+          body: JSON.stringify(data),
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFTOKEN': this.csrf_token,
+          }
+        })).json();
+
+        $dispatch('new-message', message);
+
+        this.message = '';
+      } catch(error) {
+      }
+
+    }
+  }"
+  @new-message.window="($event) => {
+    const conversation_id = $event.detail.conversation.id;
+    if (!cachedMessages[conversation_id]) return;
+
+    cachedMessages[conversation_id].unshift($event.detail);
+
+    if (activeConversation.id == conversation_id) {
+      $nextTick(() => {
+        $refs.messageContainer.scrollTo(0, $refs.messageContainer.scrollHeight);
+      });
+    }
+  }"
+  @conversation-opened.window="($event) => {
+    openConversation($event.detail.conversation, $event.detail.pageOpened ? $event.detail.pageOpened : false);
+  }"
+>
+  <template x-if="activeConversation !== null && pageOpened">
+    <div class="flex h-full flex-col">
+      <div
+        class="flex min-h-[5rem] flex-shrink-0 items-center border-b-2 border-gray-200"
+      >
+        <div class="mx-4 flex justify-between">
+          <h3
+            class="mb-0 font-medium capitalize"
+            x-text="activeConversation.name"
+          ></h3>
+        </div>
+      </div>
+
+      <div x-ref="messageContainer" class="flex-grow overflow-y-auto p-4">
+        <div class="flex flex-col-reverse justify-end">
+          <template x-for="message in messages" :key="message.id">
+            <div
+              :class="user_id == message.sender ? ' sender' : ' receiver'"
+              class="chat-bubble mb-3 max-w-sm bg-[#f6f7f9] p-4"
+              style="box-shadow: inset 0 -0.125rem 0 0 #ecedef"
+            >
+              <template
+                x-if="message && message.content_type == 'chat.textmessage'"
+              >
+                <span x-text="message.detail.content"></span>
+              </template>
+            </div>
+          </template>
+        </div>
+      </div>
+
+      <div
+        class="mt-auto flex flex-row items-center border-t-2 border-gray-200 p-3"
+      >
+        <input
+          x-model="message"
+          type="text"
+          class="w-full border py-2 px-3"
+          @keydown.enter="sendMessage"
+        />
+        <div class="ml-3">
+          <button
+            class="flex h-12 w-12 items-center justify-center rounded-full bg-blue-600 text-white"
+            type="button"
+            @click="sendMessage"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke-width="1.5"
+              stroke="currentColor"
+              class="h-6 w-6"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5"
+              />
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </template>
+</div>

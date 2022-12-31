@@ -182,6 +182,7 @@ class MessageSerializer(serializers.ModelSerializer):
         fields = [
             "id",
             "conversation",
+            # "conversation_id",
             "sender",
             "reply",
             "content_type",
@@ -224,7 +225,11 @@ class MessageSerializer(serializers.ModelSerializer):
     #     return super().to_representation(value)
 
 
-class FriendSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = get_user_model()
-        fields = ["pk", "username", "first_name", "last_name"]
+class PusherEventSerializer(serializers.Serializer):
+    name = serializers.CharField()
+    channel = serializers.CharField()
+
+
+class PusherPayloadSerializer(serializers.Serializer):
+    time_ms = serializers.IntegerField(read_only=True)
+    events = PusherEventSerializer(many=True, read_only=True)

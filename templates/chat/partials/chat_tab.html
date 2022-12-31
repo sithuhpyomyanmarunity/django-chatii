@@ -1,0 +1,75 @@
+<template x-if="tab == 'chat'">
+  <div class="flex h-full flex-col">
+    <!-- prettier-ignore -->
+    {% include './tab_title.html' with tab_title='Chats' %}
+
+    <div class="m-4">
+      <div class="relative">
+        <input
+          type="text"
+          class="w-full flex-grow rounded-xl bg-gray-200 py-3 pl-5 pr-20"
+          placeholder="Search user"
+        />
+        <button
+          type="button"
+          class="absolute top-0 bottom-0 right-0 z-10 my-0.5 mr-0.5 flex items-center justify-center rounded-r-xl bg-gray-200 py-3 px-5 text-gray-400"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke-width="1.5"
+            stroke="currentColor"
+            class="h-6 w-6"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"
+            />
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="h-full overflow-y-auto">
+      <div class="m-4 mt-1">
+        <ul
+          x-data="{ conversations: [] }"
+          x-init="
+            conversations = await (await fetch('/conversations/')).json();
+          "
+          @new-message.window="($event) => {
+            const conversation_id = $event.detail.conversation.id;
+            const index = conversations.findIndex(c => c.id == conversation_id);
+            if (index > -1) {
+              const conversation = {...conversations[index], message: $event.detail, updated_at: $event.detail.updated_at };
+              conversations.splice(index, 1);
+              conversations.unshift(conversation);
+            } else {
+              const conversation = {
+                ...$event.detail.conversation,
+                message: {...$event.detail},
+              }
+              console.log(conversation);
+              delete conversation.message.conversation;
+
+              conversations.unshift(conversation);
+            }
+          }
+          "
+          @conversation-created.window="conversations.unshift($event.detail.conversation)"
+          class="mb-0"
+        >
+          <template
+            x-for="(conversation, index) in conversations"
+            :key="conversation.id"
+          >
+            <!-- prettier-ignore -->
+            {% include './conversation_list_item.html' %}
+          </template>
+        </ul>
+      </div>
+    </div>
+  </div>
+</template>

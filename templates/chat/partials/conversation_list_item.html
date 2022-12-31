@@ -1,0 +1,43 @@
+<li
+  class="mb-3 flex rounded-xl border-2 border-[#efeff5] bg-white"
+  :class="conversation.active && 'border border-blue-600 ring ring-blue-300'"
+  @click="$dispatch('conversation-opened', { conversation: conversation, pageOpened: true })"
+>
+  <div class="flex w-full items-center p-5">
+    <div class="mr-4">
+      <span
+        class="not-sr-only flex h-12 w-12 items-center justify-center rounded-full bg-red-500 font-medium"
+      >
+        A
+      </span>
+    </div>
+    <div class="flex-grow">
+      <div class="mb-1 flex items-center">
+        <h5
+          class="mb-0 mr-auto text-ellipsis font-medium capitalize"
+          x-text="conversation.name"
+        ></h5>
+        <time
+          class="ml-4 whitespace-nowrap text-xs text-gray-400"
+          :datetime="conversation.updated_at"
+          x-text="moment.duration(moment(conversation.updated_at).diff(moment())).humanize(true)"
+        ></time>
+      </div>
+      <div class="flex items-center">
+        <template
+          x-if="conversation.message && conversation.message.content_type == 'chat.textmessage'"
+        >
+          <div
+            class="mr-auto text-xs text-stone-400 line-clamp-2"
+            x-text="conversation.message.detail.content"
+          ></div>
+        </template>
+        <template x-if="!conversation.message">
+          <div class="mr-auto text-xs text-stone-400 line-clamp-2">
+            Doesn't has message yet!
+          </div>
+        </template>
+      </div>
+    </div>
+  </div>
+</li>
