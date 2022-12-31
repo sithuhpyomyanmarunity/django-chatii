@@ -176,6 +176,8 @@ class MessageSerializer(serializers.ModelSerializer):
             "updated_at",
         ]
 
+        read_only_fields = ["sender"]
+
     def to_representation(self, instance):
         if self.parent and not self.parent.parent:
             self.fields["reply"] = MessageSerializer(read_only=True)
