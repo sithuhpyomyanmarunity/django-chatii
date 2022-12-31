@@ -3,9 +3,10 @@ from django.contrib.contenttypes.models import ContentType
 from rest_framework import serializers
 from rest_framework.fields import empty
 
-from chat.validators import min_list_length
+from friend.serializers import FriendSerializer
 
 from .models import Conversation, Message, Participant, TextMessage, get_message_content
+from .validators import min_list_length
 
 
 class ContentTypeSerializer(serializers.RelatedField):
@@ -179,6 +180,7 @@ class MessageSerializer(serializers.ModelSerializer):
     detail = MessageObjectRelatedField()
     # reply = RecursiveSerializer()
     conversation = ConversationRelatedField()
+    sender = FriendSerializer(read_only=True)
 
     class Meta:
         model = Message
@@ -194,8 +196,6 @@ class MessageSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
         ]
-
-        read_only_fields = ["sender"]
 
     def to_representation(self, instance):
         if self.parent and not self.parent.parent:

@@ -4,11 +4,32 @@
   @click="$dispatch('conversation-opened', { conversation: conversation, pageOpened: true })"
 >
   <div class="flex w-full items-center p-5">
-    <div class="mr-4">
+    <div
+      class="mr-4"
+      x-data="{
+      get initial() {
+        if (!conversation.message) return;
+
+        const friend = conversation.message.sender;
+
+        if (!friend.first_name && !friend.last_name) return conversation.name[0];
+  
+        let text = '';
+        if (friend.first_name) {
+          text += friend.first_name[0];
+        }
+        if (friend.last_name) {
+          text += friend.last_name[0];
+        }
+        return text;
+      }
+    }"
+    >
       <span
-        class="not-sr-only flex h-12 w-12 items-center justify-center rounded-full bg-emerald-400 font-medium text-white"
+        :class="conversation.message?.sender.color"
+        class="not-sr-only flex h-12 w-12 items-center justify-center rounded-full font-medium"
+        x-text="initial"
       >
-        A
       </span>
     </div>
     <div class="flex-grow">
