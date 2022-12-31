@@ -20,6 +20,7 @@
 - [Django 4.1](https://www.djangoproject.com/)
 - [Django rest framework](https://www.django-rest-framework.org/)
 - [Soketi](https://docs.soketi.app/)
+- [Alpine.js](https://alpinejs.dev/start-here) 
 - [Tailwindcss](https://tailwindcss.com/docs/installation)
 
 <br>
