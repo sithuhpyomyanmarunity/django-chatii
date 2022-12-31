@@ -8,4 +8,7 @@
     "python.languageServer": "Pylance",
     "python.analysis.autoImportCompletions": true,
     "python.analysis.autoImportUserSymbols": true,
+    "emmet.includeLanguages": {
+        "django-html": "html",
+    }
 }
