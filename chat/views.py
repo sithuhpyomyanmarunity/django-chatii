@@ -13,6 +13,7 @@ from rest_framework.response import Response
 
 from chat.pusher import event_channel_occupied, event_channel_vacated, get_pusher_client
 
+from .filters import MessageFilter
 from .models import Conversation, Message, Participant, UserStatus
 from .serializers import (
     ConversationSerializer,
@@ -50,13 +51,15 @@ class ConversationViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
 
     @action(detail=True)
-    def messages(self, request, pk=None):
+    def messages(self, request: Request, pk=None):
 
-        messages = (
-            Message.objects.filter(conversation=pk)
-            .prefetch_related("detail", "reply")
-            .order_by("-created_at")
-        )
+        messages = MessageFilter(
+            request.query_params,
+            queryset=Message.objects.filter(conversation=pk)
+            .prefetch_related("detail", "reply", "sender__avatar")
+            .select_related("conversation")
+            .order_by("-created_at"),
+        ).qs[:15]
         serializer = MessageSerializer(messages, many=True)
         return Response(serializer.data)
 
