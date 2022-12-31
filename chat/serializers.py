@@ -105,9 +105,7 @@ class MessageObjectRelatedField(serializers.RelatedField):
             and (content_type := self.parent.initial_data.get("content_type"))
             is not None
         ):
-            instance = (
-                self.parent.instance.content_object if self.parent.instance else None
-            )
+            instance = self.parent.instance.detail if self.parent.instance else None
 
             for serializer_class in self.serializer_classes:
                 model_class = serializer_class.Meta.model
@@ -155,7 +153,7 @@ class MessageSerializer(serializers.ModelSerializer):
             "reply",
             "content_type",
             # "object_id",
-            "content_object",
+            "detail",
             "created_at",
             "updated_at",
         ]
@@ -166,13 +164,13 @@ class MessageSerializer(serializers.ModelSerializer):
         return super(MessageSerializer, self).to_representation(instance)
 
     def create(self, validated_data):
-        if (content_object := validated_data.get("content_object")) is not None:
-            content_object.save()
+        if (detail := validated_data.get("detail")) is not None:
+            detail.save()
         return super().create(validated_data)
 
     def update(self, instance, validated_data):
-        if (content_object := validated_data.get("content_object")) is not None:
-            content_object.save()
+        if (detail := validated_data.get("detail")) is not None:
+            detail.save()
         return super().update(instance, validated_data)
 
     def get_reply(self, obj):
@@ -182,8 +180,8 @@ class MessageSerializer(serializers.ModelSerializer):
 
     # def to_representation(self, value):
 
-    #     if (value.content_object, TextMessage):
-    #         value.content_object = TextMessageSerializer(value.content_object).data
+    #     if (value.detail, TextMessage):
+    #         value.detail = TextMessageSerializer(value.detail).data
 
     #     else:
     #         raise Exception("Unexpected type of tagged object")
