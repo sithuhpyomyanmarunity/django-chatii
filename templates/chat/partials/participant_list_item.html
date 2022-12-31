@@ -3,14 +3,33 @@
   tabindex="0"
   :aria-checked="checked"
   :aria-labelledby="`id_participant_${friend.id}_label`"
-  x-data="{ friendName: `${friend.first_name} ${friend.last_name}`.trim().replace('', 'unknown') }"
+  x-data="{ 
+    get friendName() {
+      const name = `${friend.first_name} ${friend.last_name}`.trim();
+      if (!name) return 'Unknown';
+      return name;
+    },
+    get initial() {
+      if (!friend.first_name && !friend.last_name) return 'U';
+
+      let text = '';
+      if (friend.first_name) {
+        text += friend.first_name[0];
+      }
+      if (friend.last_name) {
+        text += friend.last_name[0];
+      }
+      return text;
+    }
+  }"
   @click="friendChecked(friend, !checked)"
   class="flex cursor-pointer flex-row items-center px-5 py-3 hover:bg-gray-100 hover:shadow-sm"
 >
   <div class="mr-4">
     <span
-      class="not-sr-only flex h-12 w-12 items-center justify-center rounded-full bg-red-500 font-medium capitalize"
-      x-text="friendName[0]"
+      :class="friend.color"
+      class="not-sr-only flex h-12 w-12 items-center justify-center rounded-full font-medium capitalize"
+      x-text="initial"
     ></span>
   </div>
   <div class="flex-grow">
