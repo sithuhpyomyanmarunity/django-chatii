@@ -23,7 +23,7 @@ class ConversationViewSet(viewsets.ModelViewSet):
 
         messages = (
             Message.objects.filter(conversation=pk)
-            .prefetch_related("content_object", "reply")
+            .prefetch_related("detail", "reply")
             .order_by("-created_at")
         )
         serializer = MessageSerializer(messages, many=True)
@@ -40,7 +40,7 @@ class ConversationViewSet(viewsets.ModelViewSet):
             .prefetch_related(
                 Prefetch(
                     "messages",
-                    queryset=Message.objects.prefetch_related("content_object")
+                    queryset=Message.objects.prefetch_related("detail")
                     .order_by("conversation", "-created_at")
                     .distinct("conversation"),
                 )
@@ -51,7 +51,7 @@ class ConversationViewSet(viewsets.ModelViewSet):
 class MessageViewSet(viewsets.ModelViewSet):
     queryset = (
         Message.objects.order_by("-created_at")
-        .prefetch_related("content_object", "reply")
+        .prefetch_related("detail", "reply")
         .all()
     )
     serializer_class = MessageSerializer
