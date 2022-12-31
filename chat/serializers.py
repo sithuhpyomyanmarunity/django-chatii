@@ -38,11 +38,17 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class ConversationSerializer(serializers.ModelSerializer):
+    def __init__(self, instance=None, data=empty, has_message=True, **kwargs):
+        super().__init__(instance, data, **kwargs)
 
-    message = serializers.SerializerMethodField(read_only=True)
+        self.has_message = has_message
 
     def get_fields(self):
         fields = super().get_fields()
+
+        if "message" not in fields and self.has_message:
+            fields["message"] = serializers.SerializerMethodField(read_only=True)
+
         if (
             self.context
             and (request := self.context.get("request")) is not None
@@ -60,7 +66,13 @@ class ConversationSerializer(serializers.ModelSerializer):
         return fields
 
     def get_message(self, obj):
-        serializer = MessageSerializer(obj.messages.first())
+        message = obj.messages.first()
+
+        if not message:
+            return None
+
+        return MessageSerializer(message).data
+
 
         return serializer.data
 
@@ -70,7 +82,7 @@ class ConversationSerializer(serializers.ModelSerializer):
             "id",
             "name",
             "conversation_type",
-            "message",
+            # "message",
             # "participants",
             "created_at",
             "updated_at",
