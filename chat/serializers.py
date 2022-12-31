@@ -1,8 +1,7 @@
-from dataclasses import field
-
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 from rest_framework import serializers
+from rest_framework.fields import empty
 
 from .models import Conversation, Message, Participant, TextMessage, get_message_content
 
