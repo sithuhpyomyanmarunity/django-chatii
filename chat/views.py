@@ -61,6 +61,7 @@ class MessageViewSet(viewsets.ModelViewSet):
     queryset = (
         Message.objects.order_by("-created_at")
         .prefetch_related("detail", "reply")
+        .select_related("conversation")
         .all()
     )
     serializer_class = MessageSerializer
